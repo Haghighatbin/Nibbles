@@ -1,4 +1,4 @@
-# Welcome to Besty's Saga
+# Welcome to the Besty's Saga
 
 Rules are simple:
 
