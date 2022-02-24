@@ -15,19 +15,17 @@ pygame==2.1.2<br />
 pygame-gui==0.6.4<br />
 
 ## Installation 
-Windows OS: 
-MAC OS:
 
 ## Songs
-"Do your chain hang low"  - Jibbs
-"Fight!"                  - Daniel Asadi
-"Immortals"               - Daniel Asadi
-"Her and the sea"         - The Clann
-"Rue des enfants"         - Luca Longobardi
+"Do your chain hang low"  - Jibbs<br />
+"Fight!"                  - Daniel Asadi<br />
+"Immortals"               - Daniel Asadi<br />
+"Her and the sea"         - The Clann<br />
+"Rue des enfants"         - Luca Longobardi<br />
 "If you crump stand up"   - EdiT
 
 ## LICENSE
-MIT
+[MIT License](https://opensource.org/licenses/MIT)
 
 
 
