@@ -35,6 +35,7 @@ Enjoy the game—with or without her sass.
 ---
 
 ## 📁 Project Structure
+
 . <br/>
 ├── Images/ # Game assets <br/>
 ├── Sounds/ # Game soundtrack and Betsy's voice <br/>
@@ -47,6 +48,7 @@ Enjoy the game—with or without her sass.
 ├── requirements.txt # Python dependencies <br/>
 ├── LICENSE # MIT License <br/>
 └── README.md # This file<br/>
+
 ---
 
 ## 🛠️ Installation
