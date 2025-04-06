@@ -35,11 +35,10 @@ Enjoy the game—with or without her sass.
 ---
 
 ## 📁 Project Structure
-
+. <br/>
 ├── Images/ # Game assets <br/>
 ├── Sounds/ # Game soundtrack and Betsy's voice <br/>
 ├── trained_model/ # Saved DQN models after training <br/>
-│ <br/>
 ├── betsy.py # Manual gameplay version (with narration) <br/>
 ├── nibbles_env.py # Reinforcement learning environment <br/>
 ├── nibbles_train.py # DQN training loop with curriculum learning <br/>
@@ -48,7 +47,6 @@ Enjoy the game—with or without her sass.
 ├── requirements.txt # Python dependencies <br/>
 ├── LICENSE # MIT License <br/>
 └── README.md # This file<br/>
-
 ---
 
 ## 🛠️ Installation
@@ -95,7 +93,7 @@ You can modify the model path at the bottom of nibbles_play.py.
 
 ## 🎥 Demo
 Watch Betsy play with AI:<br/>
-<video src="https://github.com/user-attachments/assets/206f8d41-7076-4e73-a778-17a2fd2bd156" width="320" height="240" controls></video>
+<video src="https://github.com/user-attachments/assets/ac307e7a-ddad-40d0-9568-d9259a484043" width="320" height="240" controls></video>
 
 
 ## 🎵 Soundtrack
