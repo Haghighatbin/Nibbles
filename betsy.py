@@ -9,7 +9,7 @@ from levels import Levels
 MUSIC_VOLUME = 0.1
 SOUND_VOLUME = 0.2
 BLOCK_SIZE = 10
-SPEED = 20
+SPEED = 12
 MAP_WIDTH = 640
 MAP_HEIGHT = 480
 
@@ -118,7 +118,7 @@ class Nibbles:
             manager=self.manager,
             blocking=True)
 
-            time_delta = self.clock.tick(60)/1000.0
+            time_delta = self.clock.tick(30)/1000.0
 
             while True:
                 self.manager.draw_ui(self.display)
@@ -152,11 +152,11 @@ class Nibbles:
                 else:
                     self._sound(pygame.mixer.Sound(random.choice(ate_tracks)))
 
-            if self.score == 50:
+            if self.score == 10:
                 self._restart(level=self.level + 1)
             
             # Ending
-            if self.level == 10 and self.score == 50:
+            if self.level == 10 and self.score == 9:
                 self._music(pygame.mixer.music.load(ending_track))
 
                 ### I need to get my head around a proper ending...

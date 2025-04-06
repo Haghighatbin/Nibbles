@@ -1,3 +1,46 @@
-__pycache__
-nibbles_github_token.txt
+# Byte-compiled / optimised / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
 
+# Virtual environment
+venv/
+.env/
+.venv/
+
+# VS Code settings
+.vscode/
+
+# PyCharm settings
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs and caches
+*.log
+
+# Python cache
+*.pyo
+*.pyd
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# Test coverage reports
+htmlcov/
+.coverage
+.cache/
+.tox/
+Legacy/
+
+# Jupyter Notebooks (if used)
+.ipynb_checkpoints/
+
+# Misc
+*.egg-info/
+dist/
+build/
