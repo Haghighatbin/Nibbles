@@ -36,6 +36,7 @@ htmlcov/
 .cache/
 .tox/
 Legacy/
+test.py
 
 # Jupyter Notebooks (if used)
 .ipynb_checkpoints/

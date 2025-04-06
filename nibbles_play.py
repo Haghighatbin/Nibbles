@@ -12,7 +12,7 @@ SCREEN_HEIGHT = 480
 FONT_NAME = "Arial"
 FONT_SIZE = 24
 MAX_LEVEL = 10
-SCORE_THRESHOLD = 10
+SCORE_THRESHOLD = 3
 MODEL_PATH = "trained_model/dqn_snake_final_20250404-230508.pth"
 # ───────────────────────────────────────────────────────────────────────────────────────────── #
 console = Console()
@@ -111,7 +111,7 @@ def play_trained_model(model_path: str, render_mode: bool = True) -> None:
                             level -= 1
                             console.print(f"[yellow]Manually decreased level to {level}[/yellow]")
                             break
-
+                print(f'LEVEL: {level}')
                 if level < MAX_LEVEL and env.score >= SCORE_THRESHOLD:
                     level += 1
                     env.score = 0

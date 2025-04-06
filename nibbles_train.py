@@ -708,5 +708,5 @@ def preserve_experiences(agent: DQNAgent, previous_stage: int) -> None:
 
 
 if __name__ == "__main__":
-    rewards, scores = train_dqn_curriculum_with_obstacles(num_episodes=5000, render_mode=False)
+    rewards, scores = train_dqn_curriculum_with_obstacles(num_episodes=5000, render_mode=True)
     console.print("[bold green]Training complete![/bold green]")

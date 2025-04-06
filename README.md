@@ -35,7 +35,7 @@ Enjoy the game—with or without her sass.
 ---
 
 ## 📁 Project Structure
-
+.
 ├── Images/ # Game assets <br/>
 ├── Sounds/ # Game soundtrack and Betsy's voice <br/>
 ├── trained_model/ # Saved DQN models after training <br/>
