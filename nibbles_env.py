@@ -28,8 +28,6 @@ from collections import namedtuple
 import pygame
 import numpy as np
 
-# from levels_ai import Levels
-# from levels import Levels
 from levels_ai import Levels
 
 # ─────────────────────────────── GLOBAL CONSTANTS ────────────────────────────────── #
@@ -37,7 +35,7 @@ BLOCK_SIZE = 20
 MAP_WIDTH = 640
 MAP_HEIGHT = 480
 FONT_SIZE = 24
-FPS = 60
+FPS = 180
 REWARDS_DOMAIN = 50
 LOOKAHEAD_VAL = 5
 SHORT_SELF_COLLISION = 5
@@ -205,11 +203,10 @@ class NibblesEnv:
     def step(self, action: int) -> tuple[np.ndarray, float, bool, dict]:
         """
         Advance the environment by one step/frame using the specified action.
-
+        
         Args:
-            action (int): Index of the action to perform:
-                        (0: LEFT, 1: RIGHT, 2: UP, 3: DOWN)
-
+            action (int): Index of the action to perform (0: LEFT, 1: RIGHT, 2: UP, 3: DOWN)
+        
         Returns:
             tuple:
                 - np.ndarray: New state observation.
@@ -217,35 +214,35 @@ class NibblesEnv:
                 - bool: Whether the episode has terminated.
                 - dict: Optional additional information (empty).
         """
+        # Increment step count and store distance to apple before moving.
         self.step_count += 1
         old_dist = self.distance(self.head, self.apple)
 
-        # Prevent 180-degree reversals
+        # Prevent 180-degree reversals.
         new_direction = self.action_map[action]
-        if (
-            (self.direction == Direction.LEFT and new_direction == Direction.RIGHT) or
+        if ((self.direction == Direction.LEFT and new_direction == Direction.RIGHT) or
             (self.direction == Direction.RIGHT and new_direction == Direction.LEFT) or
             (self.direction == Direction.UP and new_direction == Direction.DOWN) or
-            (self.direction == Direction.DOWN and new_direction == Direction.UP)
-        ):
+            (self.direction == Direction.DOWN and new_direction == Direction.UP)):
             new_direction = self.direction
-
         self.direction = new_direction
 
-        reward = -0.01  # Small step penalty
-        old_head = self.head
+        # Initialiwe reward with a small step penalty.
+        reward = -0.01
 
+        # Save current head before moving.
+        old_head = self.head
         self._move_snake()
         done = False
 
-        # Collision check
+        # Collision check: if collision, apply a heavy penalty and terminate.
         if self._is_collision():
             apple_dist_factor = max(0.5, 1.0 - self.distance(self.head, self.apple) / (self.width + self.height))
             reward = -10.0 * apple_dist_factor
             done = True
             return self._get_observation(), reward, done, {}
 
-        # Apple collection
+        # Apple collection: if head reaches apple, reward positively and grow.
         if self.head == self.apple:
             base_reward = 10
             length_bonus = 2.0 * self.score
@@ -254,44 +251,59 @@ class NibblesEnv:
             self.final_score = max(self.final_score, self.score)
             self._place_apple()
         else:
-            # Remove tail if no apple collected
+            # If no apple collected, remove tail segment.
             tail = self.snake.pop()
             self.snake_set.discard(tail)
 
-        # Reward shaping for distance improvement
+        # Reward shaping for distance improvement toward apple.
         new_dist = self.distance(self.head, self.apple)
         dist_improvement = old_dist - new_dist
         map_diagonal = math.sqrt(self.width**2 + self.height**2)
         normalised = dist_improvement / map_diagonal
+        reward += 0.2 * normalised if normalised > 0 else 0.1 * normalised
 
-        if normalised > 0:
-            reward += 0.2 * normalised
-        else:
-            reward += 0.1 * normalised  # Mild penalty for going the wrong way
-
-        # Bonus for staying alive (encourages exploration)
+        # Bonus for survival: encourage longer snake (and thus survival).
         reward += 0.001 * len(self.snake)
 
-        # Penalty if segments are too close to head
+        # Penalty if any snake segment is very close to the head.
         for segment in self.snake[1:]:
             if self.distance(self.head, segment) < 2 * self.block_size:
                 reward -= 0.2
 
-        # Additional penalty for forward proximity
-        forward_body_dist = self._distance_to_self(self.direction)
-        if forward_body_dist < 0.2:
-            reward -= 0.5
+        # Short-term risk (e.g., immediate danger):
+        short_distance = self._distance_to_body(self.direction)  # Expected to use a dynamic short lookahead.
+        if short_distance < 0.3:
+            # Apply a quadratic penalty; the closer the obstacle, the heavier the penalty.
+            reward -= (0.3 - short_distance) ** 2 * 0.5  # Adjust coefficient as needed.
 
-        # Adaptive episode timeout
-        base_diagonal = math.sqrt(480**2 + 320**2)  # Stage 1 baseline
+        # Long-term risk (looking further ahead):
+        long_distance = self._distance_to_self(self.direction)  # Expected to use a dynamic long lookahead.
+        if long_distance < 0.5:
+            reward -= (0.5 - long_distance) ** 2 * 0.3  # Softer penalty.
+
+        # --- Safety Margin Bonus ---
+        # Use a helper to get the normalized minimum distance to any obstacle (snake body or external).
+        safe_margin = self._get_min_distance_to_obstacles()  # Must return a value in [0,1].
+        if self.level == 2:
+            safety_threshold = 0.05  # Lower threshold for dense obstacles.
+            safety_coeff = 0.05      # Lower penalty/bonus coefficient.
+        else:
+            safety_threshold = 0.3
+            safety_coeff = 0.3
+        if safe_margin > safety_threshold:
+            reward += safety_coeff * (safe_margin - safety_threshold)
+        else:
+            reward -= safety_coeff * (safety_threshold - safe_margin)
+
+        # Adaptive episode timeout: allow more steps as map gets larger or snake grows.
+        base_diagonal = math.sqrt(480**2 + 320**2)  # Baseline for Stage 1.
         current_diagonal = math.sqrt(self.width**2 + self.height**2)
         max_steps = int(100 * (current_diagonal / base_diagonal)) + 50 * self.score
-
         if self.step_count >= max_steps:
             done = True
 
         if self.render_mode:
-            self.render([],[])
+            self.render([], [])
 
         return self._get_observation(), reward, done, {}
 
@@ -349,6 +361,39 @@ class NibblesEnv:
         """
         return any(coord in obs_group for obs_group in self.obstacles)
 
+    def _get_min_distance_to_obstacles(self) -> float:
+        """
+        Compute a normalized distance (0 to 1) from the snake's head to the nearest obstacle,
+        where obstacles include both the snake's body and external obstacles.
+        For example, distance is normalized by the maximum possible distance (like the map diagonal).
+        """
+        distances = []
+        # Check snake body segments.
+        for segment in self.snake_set:
+            if segment != self.head:
+                distances.append(self.distance(self.head, segment))
+
+        # Check external obstacles.
+        for obs_group in self.obstacles:
+            for coord in obs_group:
+                distances.append(self.distance(self.head, coord))
+        
+        if not distances:
+            return 1.0
+    
+        min_dist = min(distances)
+        # Normalize using the map diagonal as the maximum distance.
+        max_possible = math.sqrt(self.width**2 + self.height**2)
+        return min_dist / max_possible
+
+    def dynamic_short_lookahead(self):
+        # always use at least 5, but increase gradually with snake length.
+        return max(5, len(self.snake) // 4)
+
+    def dynamic_long_lookahead(self):
+        # always use at least 15, but scale with snake length.
+        return max(20, len(self.snake) // 2)
+
     def _distance_to_self(self, direction: Direction, max_steps: int = LONG_SELF_COLLISION) -> float:
         """
         Measure the normalised distance in a given direction until the snake's body or
@@ -361,6 +406,7 @@ class NibblesEnv:
         Returns:
             float: Distance to collision, normalised between 0 and 1.
         """
+        max_steps = self.dynamic_long_lookahead()
         x, y = self.head.x, self.head.y
 
         for step in range(1, max_steps + 1):
@@ -390,6 +436,7 @@ class NibblesEnv:
         Returns:
             float: Distance to collision, normalised between 0 and 1.
         """
+        max_look = self.dynamic_short_lookahead()
         x, y = self.head.x, self.head.y
 
         for step in range(1, max_look + 1):
@@ -497,14 +544,14 @@ class NibblesEnv:
             ):
                 return 1.0
 
-            if check_pos in self.snake[1:-1]:
+            if check_pos in (self.snake_set - {self.head}):
                 return 1.0
 
             if self._is_in_obstacles(check_pos):
                 return 1.0
 
             if self._is_corner_trap(check_pos, direction):
-                return 0.2  # Possibly dangerous
+                return 0.2
 
         return 0.0
 
@@ -605,9 +652,13 @@ class NibblesEnv:
         self.display.blit(apple_img, (self.apple.x, self.apple.y))
 
         # Draw obstacles
+        PADDING = 2
         for obs_group in self.obstacles:
             for (ox, oy) in obs_group:
-                pygame.draw.rect(self.display, (255, 100, 0), (ox, oy, BLOCK_SIZE, BLOCK_SIZE))
+                pygame.draw.rect(self.display, 
+                                (255, 255, 0),
+                                (ox + PADDING, oy + PADDING, BLOCK_SIZE - 2 * PADDING, BLOCK_SIZE - 2 * PADDING)
+                                )
 
         # Draw snake
         for idx, coord in enumerate(self.snake):
